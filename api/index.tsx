@@ -3,9 +3,9 @@ import { devtools } from "frog/dev";
 import { serveStatic } from "frog/serve-static";
 // import { neynar } from 'frog/hubs'
 import { handle } from "frog/vercel";
-import { Address, parseEther, isAddress } from "viem";
-import { getChainIdFromName } from "../utils/lib.js";
+import { Address, isAddress, parseEther } from "viem";
 import { spokePoolContractAbi } from "../utils/across.js";
+import { getChainIdFromName } from "../utils/lib.js";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -23,6 +23,9 @@ const baseUrls: Record<Networks, string> = {
     "https://optimistic.etherscan.io/tx",
 };
 
+type State = {
+  fromNetwork: Networks
+}
 
 
 export const app = new Frog({
@@ -35,7 +38,7 @@ export const app = new Frog({
 app.frame("/", (c) => {
   return c.res({
     action: "/finish",
-    
+
     image: "https://i.ibb.co/5LCxhw9/bridge.png",
     intents: [
       <TextInput placeholder="Amount. e.g 0.1" />,
@@ -49,6 +52,7 @@ app.frame("/", (c) => {
 });
 
 app.transaction("/tx", async (c) => {
+
   const fromNetwork = c.req.query("from") as Networks;
   const toNetwork = "arbitrum";
   const bridgeAmount = c.inputText || "0.01";
@@ -110,20 +114,20 @@ app.transaction("/tx", async (c) => {
   });
 });
 
-app.frame("/finish/:network", async (c) => {
-  let network = c.req.param('network') as Networks
-  if(!network) network = "base"
-  const { transactionId, frameData } = c;
-  console.log("User transacted", frameData?.fid);
-  const transactionHash = `${baseUrls[network]}/${transactionId}`;
+app.frame("/finish", async (c) => {
+  // let network = c.req.param('network') as Networks
+  // if(!network) network = "base"
+  // const { transactionId, frameData } = c;
+  // console.log("User transacted", frameData?.fid);
+  // const transactionHash = `${baseUrls[network]}/${transactionId}`;
 
 
-  console.log({ transactionHash });
+  // console.log({ transactionHash });
 
   return c.res({
     image: "https://pbs.twimg.com/media/F4M9IOlWwAEgTDf.jpg",
     intents: [
-      <Button.Link href={transactionHash}>View Transaction</Button.Link>,
+      // <Button.Link href={transactionHash}>View Transaction</Button.Link>,
       <Button.Reset>Home</Button.Reset>,
     ],
   });
