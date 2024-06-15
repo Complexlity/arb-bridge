@@ -12,8 +12,18 @@ import { spokePoolContractAbi } from "../utils/across.js";
 //   runtime: 'edge',
 // }
 
-const networks = ["ethereum", "base", "optimism", "arbitrum"] as const;
+const networks = ["base", "optimism", "ethereum",] as const;
 export type Networks = (typeof networks)[number];
+
+const baseUrls: Record<Networks, string> = {
+  ethereum:
+    "https://etherscan.io/tx",
+  base: "https://basescan.org/tx",
+  optimism:
+    "https://optimistic.etherscan.io/tx",
+};
+
+
 
 export const app = new Frog({
   assetsPath: "/",
@@ -25,39 +35,10 @@ export const app = new Frog({
 app.frame("/", (c) => {
   return c.res({
     action: "/finish",
-    image: (
-      <div
-        style={{
-          alignItems: "center",
-          background: "linear-gradient(to right, #432889, #17101F)",
-          backgroundSize: "100% 100%",
-          display: "flex",
-          flexDirection: "column",
-          flexWrap: "nowrap",
-          height: "100%",
-          justifyContent: "center",
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            color: "white",
-            fontSize: 60,
-            fontStyle: "normal",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: "0 120px",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          Bridge to arbitrum
-        </div>
-      </div>
-    ),
+    
+    image: "https://i.ibb.co/5LCxhw9/bridge.png",
     intents: [
-      <TextInput placeholder="Bridge to arbitrum" />,
+      <TextInput placeholder="Amount. e.g 0.1" />,
       ...networks.map((n) => (
         <Button.Transaction target={`/tx?from=${n}`}>
           {n.slice(0, 1).toUpperCase() + n.slice(1)}
@@ -129,34 +110,22 @@ app.transaction("/tx", async (c) => {
   });
 });
 
-app.frame("/finish", async (c) => {
-  return c.res({
-    image: (
-      <div>
-        <span
-          style={{
-            width: "100vw",
-            paddingLeft: 80,
-            paddingRight: 80,
-            lineHeight: "1",
-          }}
-        >
-          Your ETH should arrive in a few seconds
-        </span>
+app.frame("/finish/:network", async (c) => {
+  let network = c.req.param('network') as Networks
+  if(!network) network = "base"
+  const { transactionId, frameData } = c;
+  console.log("User transacted", frameData?.fid);
+  const transactionHash = `${baseUrls[network]}/${transactionId}`;
 
-        <div
-          style={{
-            display: "flex",
-            width: "100vw",
-            paddingLeft: 80,
-            fontSize: 42,
-            color: "#ADA6B4",
-          }}
-        >
-          Created by @greg
-        </div>
-      </div>
-    ),
+
+  console.log({ transactionHash });
+
+  return c.res({
+    image: "https://pbs.twimg.com/media/F4M9IOlWwAEgTDf.jpg",
+    intents: [
+      <Button.Link href={transactionHash}>View Transaction</Button.Link>,
+      <Button.Reset>Home</Button.Reset>,
+    ],
   });
 });
 

@@ -1,6 +1,6 @@
 import { Networks } from "../api/index.js";
 
-export function getChainIdFromName(name: Networks | "ethereum") {
+export function getChainIdFromName(name: Networks | "arbitrum") {
   switch (name) {
     case "ethereum":
       return "1";
