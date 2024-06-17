@@ -6,27 +6,26 @@ import { handle } from "frog/vercel";
 import { Address, isAddress, parseEther } from "viem";
 import { spokePoolContractAbi } from "../utils/across.js";
 import { getChainIdFromName } from "../utils/lib.js";
+import { ImageResponse, loadGoogleFont } from "hono-og";
+
 
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
 // }
 
-const networks = ["base", "optimism", "ethereum",] as const;
+const networks = ["base", "optimism", "ethereum"] as const;
 export type Networks = (typeof networks)[number];
 
 const baseUrls: Record<Networks, string> = {
-  ethereum:
-    "https://etherscan.io/tx",
+  ethereum: "https://etherscan.io/tx",
   base: "https://basescan.org/tx",
-  optimism:
-    "https://optimistic.etherscan.io/tx",
+  optimism: "https://optimistic.etherscan.io/tx",
 };
 
 type State = {
-  fromNetwork: Networks
-}
-
+  fromNetwork: Networks;
+};
 
 export const app = new Frog({
   assetsPath: "/",
@@ -37,6 +36,7 @@ export const app = new Frog({
 
 app.frame("/", (c) => {
   return c.res({
+    title: "Bridge ETH to Arbritrum from Base, Optimism, Ethereum",
     action: "/finish",
 
     image: "https://i.ibb.co/5LCxhw9/bridge.png",
@@ -51,8 +51,110 @@ app.frame("/", (c) => {
   });
 });
 
-app.transaction("/tx", async (c) => {
+app.frame("/test", (c) => {
+  return c.res({
+    image: "https://i.ibb.co/5LCxhw9/bridge.png",
+    intents: [<Button action="/hono">Try Hono</Button>],
+  });
+});
 
+const JSX = () => {
+  return (
+    <div
+      style={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#fff",
+        fontSize: 32,
+        fontWeight: 600,
+      }}
+    >
+      <svg
+        width="75"
+        viewBox="0 0 75 65"
+        fill="#000"
+        style={{ margin: "0 75px" }}
+      >
+        <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>
+      </svg>
+      <div style={{ marginTop: 40 }}>Hello, World</div>
+    </div>
+  );
+};
+
+app.hono.get("/hono/image", async (c) => {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 128,
+          background: "lavender",
+        }}
+      >
+        Hello from artificial route!
+      </div>
+    ) as any,
+    {
+      width: 1200,
+      height: 630,
+      format: "png",
+      fonts: [{
+        name: "Ojuju",
+        weight: 600,
+        data: await loadGoogleFont({
+          family: "Ojuju",
+          weight: 600
+        })
+      }]
+    }
+  );
+});
+
+// app.hono.get("/hono", (c) => {
+//   console.log("I am in hono get");
+//   return c.json({
+//     hello: "world",
+//   });
+// });
+// app.hono.post("/hono", (c) => {
+//   console.log("I am in hono post");
+//   return c.json({
+//     hello: "world",
+//   });
+// });
+
+app.frame("/hono", (c) => {
+  console.log("I am in frame hono");
+  return c.res({
+    image: (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 128,
+          background: "lavender",
+        }}
+      >
+        Hello from natur route!
+      </div>
+    ),
+    intents: [<Button action="/test">Hono</Button>],
+  });
+});
+
+app.transaction("/tx", async (c) => {
   const fromNetwork = c.req.query("from") as Networks;
   const toNetwork = "arbitrum";
   const bridgeAmount = c.inputText || "0.01";
@@ -72,7 +174,7 @@ app.transaction("/tx", async (c) => {
   const outputToken = wethByChain["arbitrum"];
   const parsedAmount = parseEther(bridgeAmount);
   const destinationChainId = getChainIdFromName(toNetwork);
-  const originChainId = getChainIdFromName(fromNetwork)
+  const originChainId = getChainIdFromName(fromNetwork);
 
   const url = "https://app.across.to/api/suggested-fees";
   const params = new URLSearchParams({
@@ -120,7 +222,6 @@ app.frame("/finish", async (c) => {
   // const { transactionId, frameData } = c;
   // console.log("User transacted", frameData?.fid);
   // const transactionHash = `${baseUrls[network]}/${transactionId}`;
-
 
   // console.log({ transactionHash });
 
